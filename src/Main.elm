@@ -1,15 +1,18 @@
 module Main exposing (main)
 
 import Browser
-import Html
-import Svg
-import Svg.Attributes as SAttrs
-import Svg.Lazy
-import Time
+import Browser.Events
+import Json.Decode as Decode
+import Svg exposing (..)
+import Svg.Attributes as SvgAttrs
 
 
 
 -- MODEL
+
+
+type alias Model =
+    { pos : Position }
 
 
 type alias Position =
@@ -18,11 +21,7 @@ type alias Position =
     }
 
 
-type alias Model =
-    { pos : Position }
-
-
-initialModel : () -> ( Model, Cmd msg )
+initialModel : () -> ( Model, Cmd Msg )
 initialModel _ =
     ( { pos = { x = 100, y = 200 } }
     , Cmd.none
@@ -34,50 +33,73 @@ initialModel _ =
 
 
 type Msg
-    = Tick Time.Posix
+    = OnAnimationFrame Float
+    | KeyDown TankAction
 
 
-update : Msg -> Model -> ( Model, Cmd msg )
+type TankAction
+    = MoveUp
+    | MoveDown
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Tick _ ->
+        OnAnimationFrame deltaTime ->
+            ( model, Cmd.none )
+
+        KeyDown action ->
             let
+                _ =
+                    Debug.log "key pressed" action
+
+                oldPos : Position
                 oldPos =
                     model.pos
 
-                newPos =
-                    { oldPos | x = oldPos.y, y = oldPos.x }
+                newPosUp : Position
+                newPosUp =
+                    { oldPos | y = oldPos.y - 10 }
+
+                -- (0,0) - top left
+                newPosDown : Position
+                newPosDown =
+                    { oldPos | y = oldPos.y + 10 }
             in
-            -- Game loop
-            ( { model | pos = newPos }, Cmd.none )
+            case action of
+                MoveUp ->
+                    ( { model | pos = newPosUp }, Cmd.none )
+
+                MoveDown ->
+                    ( { model | pos = newPosDown }, Cmd.none )
 
 
 
 -- VIEW
 
 
-view : Model -> Html.Html Msg
+view : Model -> Svg.Svg Msg
 view model =
-    Html.div []
-        [ Svg.Lazy.lazy gameObject model.pos ]
+    svg
+        [ SvgAttrs.width "500"
+        , SvgAttrs.height "500"
+        , SvgAttrs.viewBox "0 0 500 500"
+        , SvgAttrs.style "background: #efefef"
+        ]
+        [ viewTank model.pos ]
 
 
-gameObject : Position -> Html.Html msg
-gameObject pos =
-    Svg.svg
-        [ SAttrs.width "500"
-        , SAttrs.height "500"
+viewTank : Position -> Svg.Svg Msg
+viewTank pos =
+    Svg.image
+        [ SvgAttrs.class "rendered-image-class"
+        , SvgAttrs.width "100"
+        , SvgAttrs.height "100"
+        , SvgAttrs.x (String.fromFloat pos.x)
+        , SvgAttrs.y (String.fromFloat pos.y)
+        , SvgAttrs.xlinkHref "assets/tank.png"
         ]
-        [ Svg.image
-            [ SAttrs.class "rendered-image-class"
-            , SAttrs.width "100"
-            , SAttrs.height "100"
-            , SAttrs.x (String.fromFloat pos.x)
-            , SAttrs.y (String.fromFloat pos.y)
-            , SAttrs.xlinkHref "assets/tank.png"
-            ]
-            []
-        ]
+        []
 
 
 
@@ -86,16 +108,29 @@ gameObject pos =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    let
-        fps : Float
-        fps =
-            1000 / 40
-
-        -- 40 FPS
-    in
     Sub.batch
-        [ Time.every fps Tick
+        [ Browser.Events.onAnimationFrameDelta OnAnimationFrame
+        , Browser.Events.onKeyDown (Decode.map KeyDown keyDecoder)
         ]
+
+
+keyDecoder : Decode.Decoder TankAction
+keyDecoder =
+    Decode.field "key" Decode.string
+        |> Decode.andThen keyToPlayerAction
+
+
+keyToPlayerAction : String -> Decode.Decoder TankAction
+keyToPlayerAction keyString =
+    case keyString of
+        "ArrowUp" ->
+            Decode.succeed MoveUp
+
+        "ArrowDown" ->
+            Decode.succeed MoveDown
+
+        _ ->
+            Decode.fail "not an event we care about"
 
 
 
