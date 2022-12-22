@@ -1,7 +1,10 @@
 module Main exposing (main)
 
+-- import Time
+
 import Browser
 import Browser.Events
+import Entity exposing (..)
 import Json.Decode as Decode
 import Svg exposing (..)
 import Svg.Attributes as SvgAttrs
@@ -11,19 +14,30 @@ import Svg.Attributes as SvgAttrs
 -- MODEL
 
 
-type alias Model =
-    { pos : Position }
-
-
-type alias Position =
-    { x : Float
-    , y : Float
+type alias Tank =
+    { pos : Position
+    , vel : Velocity
+    , rot : Rotation
+    , img : String
     }
+
+
+initialTank : Tank
+initialTank =
+    { pos = initialPosition
+    , vel = initialVelocity
+    , rot = 25
+    , img = "assets/tank.png"
+    }
+
+
+type alias Model =
+    { tank : Tank }
 
 
 initialModel : () -> ( Model, Cmd Msg )
 initialModel _ =
-    ( { pos = { x = 100, y = 200 } }
+    ( { tank = initialTank }
     , Cmd.none
     )
 
@@ -34,44 +48,26 @@ initialModel _ =
 
 type Msg
     = OnAnimationFrame Float
-    | KeyDown TankAction
-
-
-type TankAction
-    = MoveUp
-    | MoveDown
+    | KeyDown EntityAction
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         OnAnimationFrame deltaTime ->
-            ( model, Cmd.none )
+            let
+                delta =
+                    deltaTime / 1000
+            in
+            ( { model | tank = move model.tank delta }, Cmd.none )
 
         KeyDown action ->
-            let
-                _ =
-                    Debug.log "key pressed" action
-
-                oldPos : Position
-                oldPos =
-                    model.pos
-
-                newPosUp : Position
-                newPosUp =
-                    { oldPos | y = oldPos.y - 10 }
-
-                -- (0,0) - top left
-                newPosDown : Position
-                newPosDown =
-                    { oldPos | y = oldPos.y + 10 }
-            in
             case action of
-                MoveUp ->
-                    ( { model | pos = newPosUp }, Cmd.none )
+                AccUp ->
+                    ( { model | tank = actAccUp model.tank 10 10 }, Cmd.none )
 
-                MoveDown ->
-                    ( { model | pos = newPosDown }, Cmd.none )
+                AccDown ->
+                    ( { model | tank = actAccDown model.tank 10 10 }, Cmd.none )
 
 
 
@@ -86,20 +82,7 @@ view model =
         , SvgAttrs.viewBox "0 0 500 500"
         , SvgAttrs.style "background: #efefef"
         ]
-        [ viewTank model.pos ]
-
-
-viewTank : Position -> Svg.Svg Msg
-viewTank pos =
-    Svg.image
-        [ SvgAttrs.class "rendered-image-class"
-        , SvgAttrs.width "100"
-        , SvgAttrs.height "100"
-        , SvgAttrs.x (String.fromFloat pos.x)
-        , SvgAttrs.y (String.fromFloat pos.y)
-        , SvgAttrs.xlinkHref "assets/tank.png"
-        ]
-        []
+        [ viewEntity model.tank 10 ]
 
 
 
@@ -114,20 +97,20 @@ subscriptions _ =
         ]
 
 
-keyDecoder : Decode.Decoder TankAction
+keyDecoder : Decode.Decoder EntityAction
 keyDecoder =
     Decode.field "key" Decode.string
         |> Decode.andThen keyToPlayerAction
 
 
-keyToPlayerAction : String -> Decode.Decoder TankAction
+keyToPlayerAction : String -> Decode.Decoder EntityAction
 keyToPlayerAction keyString =
     case keyString of
         "ArrowUp" ->
-            Decode.succeed MoveUp
+            Decode.succeed AccUp
 
         "ArrowDown" ->
-            Decode.succeed MoveDown
+            Decode.succeed AccDown
 
         _ ->
             Decode.fail "not an event we care about"
