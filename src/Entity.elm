@@ -113,10 +113,6 @@ viewEntity ent scale =
         rotateString =
             "rotate("
                 ++ String.fromFloat ent.rot
-                -- ++ ","
-                -- ++ String.fromFloat ent.pos.x
-                -- ++ ","
-                -- ++ String.fromFloat ent.pos.y
                 ++ ")"
 
         transformString =
@@ -128,7 +124,5 @@ viewEntity ent scale =
         , SvgA.x (String.fromFloat ent.pos.x)
         , SvgA.y (String.fromFloat ent.pos.y)
         , SvgA.transform transformString
-
-        -- , SvgA.transform rotateString
         ]
         []

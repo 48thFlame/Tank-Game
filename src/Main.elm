@@ -1,11 +1,11 @@
 module Main exposing (main)
 
--- import Time
-
 import Browser
-import Browser.Events
+import Browser.Events as Events
 import Entity exposing (..)
+import Html
 import Json.Decode as Decode
+import Set
 import Svg exposing (..)
 import Svg.Attributes as SvgAttrs
 
@@ -32,12 +32,14 @@ initialTank =
 
 
 type alias Model =
-    { tank : Tank }
+    { tank : Tank
+    , keys : KeysPressed
+    }
 
 
 initialModel : () -> ( Model, Cmd Msg )
 initialModel _ =
-    ( { tank = initialTank }
+    ( { tank = initialTank, keys = initialKeysDown }
     , Cmd.none
     )
 
@@ -48,7 +50,9 @@ initialModel _ =
 
 type Msg
     = OnAnimationFrame Float
-    | KeyDown EntityAction
+    | KeyDown String
+    | KeyUp String
+    | Blur Events.Visibility
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -61,28 +65,41 @@ update msg model =
             in
             ( { model | tank = move model.tank delta }, Cmd.none )
 
-        KeyDown action ->
-            case action of
-                AccUp ->
-                    ( { model | tank = actAccUp model.tank 10 10 }, Cmd.none )
+        KeyDown key ->
+            ( applyFuncToModelKeys model (addKey key), Cmd.none )
 
-                AccDown ->
-                    ( { model | tank = actAccDown model.tank 10 10 }, Cmd.none )
+        KeyUp key ->
+            ( applyFuncToModelKeys model (removeKey key), Cmd.none )
+
+        Blur _ ->
+            let
+                _ =
+                    Debug.log "here" model.keys
+            in
+            ( applyFuncToModelKeys model clearKeys, Cmd.none )
 
 
 
+-- ( keysUpdate model eMsg, Cmd.none )
+-- AccUp ->
+--     ( { model | tank = actAccUp model.tank 10 10 }, Cmd.none )
+-- AccDown ->
+--     ( { model | tank = actAccDown model.tank 10 10 }, Cmd.none )
 -- VIEW
 
 
 view : Model -> Svg.Svg Msg
 view model =
-    svg
-        [ SvgAttrs.width "500"
-        , SvgAttrs.height "500"
-        , SvgAttrs.viewBox "0 0 500 500"
-        , SvgAttrs.style "background: #efefef"
+    Html.div []
+        [ svg
+            [ SvgAttrs.width "500"
+            , SvgAttrs.height "500"
+            , SvgAttrs.viewBox "0 0 500 500"
+            , SvgAttrs.style "background: #efefef"
+            ]
+            [ viewEntity model.tank 10 ]
+        , Html.div [] [ Html.text (model.keys |> Debug.toString) ]
         ]
-        [ viewEntity model.tank 10 ]
 
 
 
@@ -92,28 +109,52 @@ view model =
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
-        [ Browser.Events.onAnimationFrameDelta OnAnimationFrame
-        , Browser.Events.onKeyDown (Decode.map KeyDown keyDecoder)
+        [ Events.onAnimationFrameDelta OnAnimationFrame
+        , Events.onKeyDown (keyDecoder KeyDown)
+        , Events.onKeyUp (keyDecoder KeyUp)
+        , Events.onVisibilityChange Blur
         ]
 
 
-keyDecoder : Decode.Decoder EntityAction
-keyDecoder =
-    Decode.field "key" Decode.string
-        |> Decode.andThen keyToPlayerAction
+type alias KeysPressed =
+    Set.Set String
 
 
-keyToPlayerAction : String -> Decode.Decoder EntityAction
-keyToPlayerAction keyString =
-    case keyString of
-        "ArrowUp" ->
-            Decode.succeed AccUp
+initialKeysDown : Set.Set String
+initialKeysDown =
+    Set.empty
 
-        "ArrowDown" ->
-            Decode.succeed AccDown
 
-        _ ->
-            Decode.fail "not an event we care about"
+addKey : String -> KeysPressed -> KeysPressed
+addKey key s =
+    Set.insert key s
+
+
+removeKey : String -> KeysPressed -> KeysPressed
+removeKey key s =
+    Set.remove key s
+
+
+clearKeys : KeysPressed -> KeysPressed
+clearKeys _ =
+    Set.empty
+
+
+isKeyDown : String -> KeysPressed -> Bool
+isKeyDown key s =
+    Set.member key s
+
+
+{-| Takes in a msg that holds a `String`
+-}
+keyDecoder : (String -> Msg) -> Decode.Decoder Msg
+keyDecoder m =
+    Decode.map m (Decode.field "key" Decode.string)
+
+
+applyFuncToModelKeys : Model -> (KeysPressed -> KeysPressed) -> Model
+applyFuncToModelKeys model func =
+    { model | keys = func model.keys }
 
 
 
