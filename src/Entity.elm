@@ -1,62 +1,16 @@
 module Entity exposing (..)
 
+import Html.Attributes exposing (action)
 import Svg
-import Svg.Attributes as SvgA exposing (scale)
+import Svg.Attributes as SvgA
 
 
-type alias Velocity =
-    { dx : Float
-    , dy : Float
+type alias EntityBase =
+    { pos : Position
+    , dim : Dimension
+    , rot : Rotation
+    , img : Image
     }
-
-
-initialVelocity : Velocity
-initialVelocity =
-    { dx = 0, dy = 0 }
-
-
-actAccUp : { e | vel : Velocity } -> Float -> Float -> { e | vel : Velocity }
-actAccUp ent speed maxSpeed =
-    let
-        vel : Velocity
-        vel =
-            ent.vel
-
-        tempVel : Velocity
-        tempVel =
-            { vel | dy = vel.dy - speed }
-
-        newVel : Velocity
-        newVel =
-            if tempVel.dy < -maxSpeed then
-                { vel | dy = maxSpeed }
-
-            else
-                tempVel
-    in
-    { ent | vel = newVel }
-
-
-actAccDown : { e | vel : Velocity } -> Float -> Float -> { e | vel : Velocity }
-actAccDown ent speed maxSpeed =
-    let
-        vel : Velocity
-        vel =
-            ent.vel
-
-        tempVel : Velocity
-        tempVel =
-            { vel | dy = vel.dy + speed }
-
-        newVel : Velocity
-        newVel =
-            if tempVel.dy > maxSpeed then
-                { vel | dy = maxSpeed }
-
-            else
-                tempVel
-    in
-    { ent | vel = newVel }
 
 
 type alias Position =
@@ -65,31 +19,38 @@ type alias Position =
     }
 
 
-initialPosition : Position
-initialPosition =
-    { x = 0, y = 0 }
-
-
-move : { e | pos : Position, vel : Velocity } -> Float -> { e | pos : Position, vel : Velocity }
-move ent delta =
-    let
-        pos : Position
-        pos =
-            ent.pos
-
-        vel : Velocity
-        vel =
-            ent.vel
-
-        newPos : Position
-        newPos =
-            { pos | x = pos.x + vel.dx * delta, y = pos.y + vel.dy * delta }
-    in
-    { ent | pos = newPos }
+type alias Dimension =
+    { width : Float
+    , height : Float
+    }
 
 
 type alias Rotation =
     Float
+
+
+type alias Image =
+    String
+
+
+type MoveDirection
+    = UpDown
+    | LeftRight
+
+
+type EntityAction
+    = MoveUpDown Float
+    | Rotate Float
+
+
+initialPosition : Position
+initialPosition =
+    { x = 320, y = 240 }
+
+
+initialDimension : Float -> Float -> Dimension
+initialDimension imageWidth imageHeight =
+    { width = imageWidth, height = imageHeight }
 
 
 initialRotation : Rotation
@@ -97,32 +58,45 @@ initialRotation =
     0
 
 
-type EntityAction
-    = AccUp
-    | AccDown
+actAction : EntityAction -> EntityBase -> EntityBase
+actAction action ent =
+    case action of
+        MoveUpDown amount ->
+            let
+                oldPos =
+                    ent.pos
+
+                newPos =
+                    { oldPos | y = oldPos.y + amount }
+            in
+            { ent | pos = newPos }
+
+        Rotate angle ->
+            { ent | rot = ent.rot + angle }
 
 
-viewEntity : { e | img : String, pos : Position, rot : Rotation } -> Float -> Svg.Svg msg
+viewEntity : EntityBase -> Float -> Svg.Svg msg
 viewEntity ent scale =
     let
-        scaleString : String
-        scaleString =
-            "scale(" ++ String.fromFloat scale ++ ")"
+        centeredPos =
+            { x = ent.pos.x - ((ent.dim.width * scale) / 2)
+            , y = ent.pos.y - ((ent.dim.height * scale) / 2)
+            }
 
-        rotateString : String
         rotateString =
             "rotate("
                 ++ String.fromFloat ent.rot
+                ++ ","
+                ++ String.fromFloat ent.pos.x
+                ++ ","
+                ++ String.fromFloat ent.pos.y
                 ++ ")"
-
-        transformString =
-            scaleString ++ " " ++ rotateString
     in
     Svg.image
-        [ SvgA.class "rendered-image-class"
-        , SvgA.xlinkHref ent.img
-        , SvgA.x (String.fromFloat ent.pos.x)
-        , SvgA.y (String.fromFloat ent.pos.y)
-        , SvgA.transform transformString
+        [ SvgA.xlinkHref ent.img
+        , SvgA.x (String.fromFloat centeredPos.x)
+        , SvgA.y (String.fromFloat centeredPos.y)
+        , SvgA.transform rotateString
+        , SvgA.style "image-rendering: pixelated;"
         ]
         []
