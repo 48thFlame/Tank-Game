@@ -15,20 +15,62 @@ import Svg.Attributes as SvgA
 
 
 type alias Tank =
-    EntityBase
+    { eb : EntityBase
+    , keys : KeyActionManager
+    }
 
 
 initialTank : Tank
 initialTank =
-    { pos = initialPosition
-    , dim = initialDimension 64 64
-    , rot = initialRotation
-    , img = "assets/tank.png"
+    let
+        speed =
+            140
+
+        rotationAngle =
+            180
+    in
+    { eb =
+        { pos = initialPosition
+        , dim = initialDimension 64 64
+        , rot = initialRotation
+        , img = "assets/tank.png"
+        }
+    , keys =
+        [ ( "ArrowUp", MoveForward speed )
+        , ( "ArrowDown", MoveForward -speed )
+        , ( "ArrowLeft", Rotate -rotationAngle )
+        , ( "ArrowRight", Rotate rotationAngle )
+        ]
+    }
+
+
+initialTank2 : Tank
+initialTank2 =
+    let
+        speed =
+            140
+
+        rotationAngle =
+            180
+    in
+    { eb =
+        { pos = initialPosition
+        , dim = initialDimension 64 64
+        , rot = initialRotation
+        , img = "assets/tank.png"
+        }
+    , keys =
+        [ ( "w", MoveForward speed )
+        , ( "s", MoveForward -speed )
+        , ( "a", Rotate -rotationAngle )
+        , ( "d", Rotate rotationAngle )
+        ]
     }
 
 
 type alias Model =
     { tank : Tank
+    , tank2 : Tank
     , keys : KeysPressed
     , fps : Int
     }
@@ -36,7 +78,7 @@ type alias Model =
 
 initialModel : () -> ( Model, Cmd Msg )
 initialModel _ =
-    ( { tank = initialTank, keys = initialKeysPressed, fps = 0 }
+    ( { tank = initialTank, tank2 = initialTank2, keys = initialKeysPressed, fps = 0 }
     , Cmd.none
     )
 
@@ -56,11 +98,12 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         OnAnimationFrame deltaTime ->
+            -- main game loop
             let
                 delta =
                     deltaTime / 1000
             in
-            ( { model | tank = updateTank delta model model.tank }, Cmd.none )
+            ( { model | tank = updateTank delta model model.tank, tank2 = updateTank delta model model.tank2 }, Cmd.none )
 
         KeyDown key ->
             ( applyFuncToModelKeys model (addKey key), Cmd.none )
@@ -74,29 +117,7 @@ update msg model =
 
 updateTank : Float -> Model -> Tank -> Tank
 updateTank delta model tank =
-    let
-        speed =
-            500 * delta
-
-        rotationAngle =
-            360 * delta
-
-        stuff =
-            [ ( "ArrowUp", MoveUpDown -speed )
-            , ( "ArrowDown", MoveUpDown speed )
-            , ( "ArrowLeft", Rotate -rotationAngle )
-            , ( "ArrowRight", Rotate rotationAngle )
-            ]
-
-        handle : Model -> ( String, EntityAction ) -> EntityBase -> EntityBase
-        handle m pair t =
-            if isPressed (Tuple.first pair) m.keys then
-                actAction (Tuple.second pair) t
-
-            else
-                t
-    in
-    List.foldl (handle model) tank stuff
+    keyManagerUpdate delta model.keys tank
 
 
 
@@ -107,10 +128,10 @@ view : Model -> Svg.Svg Msg
 view model =
     let
         width =
-            "640"
+            "780"
 
         height =
-            "480"
+            "640"
     in
     Html.div []
         [ svg
@@ -119,7 +140,9 @@ view model =
             , SvgA.height height
             , SvgA.style "background: #efefef; display: block; margin: auto;"
             ]
-            [ viewEntity model.tank 1 ]
+            [ viewEntity model.tank.eb 1
+            , viewEntity model.tank2.eb 1
+            ]
         , Html.div [] [ Html.text (model.keys |> Set.toList |> String.join ", ") ]
         ]
 

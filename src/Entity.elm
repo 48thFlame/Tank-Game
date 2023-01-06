@@ -1,6 +1,6 @@
 module Entity exposing (..)
 
-import Html.Attributes exposing (action)
+import Keys exposing (..)
 import Svg
 import Svg.Attributes as SvgA
 
@@ -40,7 +40,9 @@ type MoveDirection
 
 type EntityAction
     = MoveUpDown Float
+    | MoveLeftRight Float
     | Rotate Float
+    | MoveForward Float
 
 
 initialPosition : Position
@@ -58,21 +60,47 @@ initialRotation =
     0
 
 
-actAction : EntityAction -> EntityBase -> EntityBase
-actAction action ent =
+actAction : Float -> EntityAction -> EntityBase -> EntityBase
+actAction delta action ent =
     case action of
-        MoveUpDown amount ->
+        MoveUpDown dy ->
             let
                 oldPos =
                     ent.pos
 
                 newPos =
-                    { oldPos | y = oldPos.y + amount }
+                    { oldPos | y = oldPos.y + (dy * delta) }
             in
             { ent | pos = newPos }
 
-        Rotate angle ->
-            { ent | rot = ent.rot + angle }
+        MoveLeftRight dx ->
+            let
+                oldPos =
+                    ent.pos
+
+                newPos =
+                    { oldPos | x = oldPos.x + (dx * delta) }
+            in
+            { ent | pos = newPos }
+
+        Rotate dAngle ->
+            { ent | rot = ent.rot + (dAngle * delta) }
+
+        MoveForward v ->
+            let
+                radii =
+                    degrees ent.rot
+
+                x =
+                    ent.pos.x + (v * delta * cos radii)
+
+                y =
+                    ent.pos.y + (v * delta * sin radii)
+
+                newPos =
+                    { x = x, y = y }
+            in
+            { ent | pos = newPos }
 
 
 viewEntity : EntityBase -> Float -> Svg.Svg msg
@@ -100,3 +128,25 @@ viewEntity ent scale =
         , SvgA.style "image-rendering: pixelated;"
         ]
         []
+
+
+type alias KeyActionManager =
+    List ( String, EntityAction )
+
+
+keyManagerUpdate :
+    Float
+    -> KeysPressed
+    -> { e | eb : EntityBase, keys : KeyActionManager }
+    -> { e | eb : EntityBase, keys : KeyActionManager }
+keyManagerUpdate delta keys ent =
+    let
+        handle : ( String, EntityAction ) -> EntityBase -> EntityBase
+        handle pair eb =
+            if isPressed (Tuple.first pair) keys then
+                actAction delta (Tuple.second pair) eb
+
+            else
+                eb
+    in
+    { ent | eb = List.foldl handle ent.eb ent.keys }
