@@ -2,12 +2,13 @@ module Main exposing (main)
 
 import Browser
 import Browser.Events as Events
+import Constants exposing (..)
 import Entity exposing (..)
 import Html
 import Keys exposing (..)
 import Set
-import Svg exposing (..)
-import Svg.Attributes as SvgA
+import Svg
+import Svg.Attributes as SvgAttr
 
 
 
@@ -22,13 +23,6 @@ type alias Tank =
 
 initialTank : Tank
 initialTank =
-    let
-        speed =
-            140
-
-        rotationAngle =
-            180
-    in
     { eb =
         { pos = initialPosition
         , dim = initialDimension 64 64
@@ -36,23 +30,16 @@ initialTank =
         , img = "assets/tank.png"
         }
     , keys =
-        [ ( "ArrowUp", MoveForward speed )
-        , ( "ArrowDown", MoveForward -speed )
-        , ( "ArrowLeft", Rotate -rotationAngle )
-        , ( "ArrowRight", Rotate rotationAngle )
+        [ ( "ArrowUp", MoveForward tankSpeed )
+        , ( "ArrowDown", MoveForward -tankSpeed )
+        , ( "ArrowLeft", Rotate -tankRotationSpeed )
+        , ( "ArrowRight", Rotate tankRotationSpeed )
         ]
     }
 
 
 initialTank2 : Tank
 initialTank2 =
-    let
-        speed =
-            140
-
-        rotationAngle =
-            180
-    in
     { eb =
         { pos = initialPosition
         , dim = initialDimension 64 64
@@ -60,10 +47,10 @@ initialTank2 =
         , img = "assets/tank.png"
         }
     , keys =
-        [ ( "w", MoveForward speed )
-        , ( "s", MoveForward -speed )
-        , ( "a", Rotate -rotationAngle )
-        , ( "d", Rotate rotationAngle )
+        [ ( "w", MoveForward tankSpeed )
+        , ( "s", MoveForward -tankSpeed )
+        , ( "a", Rotate -tankRotationSpeed )
+        , ( "d", Rotate tankRotationSpeed )
         ]
     }
 
@@ -73,12 +60,18 @@ type alias Model =
     , tank2 : Tank
     , keys : KeysPressed
     , fps : Int
+    , colliding : Bool
     }
 
 
 initialModel : () -> ( Model, Cmd Msg )
 initialModel _ =
-    ( { tank = initialTank, tank2 = initialTank2, keys = initialKeysPressed, fps = 0 }
+    ( { tank = initialTank
+      , tank2 = initialTank2
+      , keys = initialKeysPressed
+      , fps = 0
+      , colliding = False
+      }
     , Cmd.none
     )
 
@@ -103,7 +96,17 @@ update msg model =
                 delta =
                     deltaTime / 1000
             in
-            ( { model | tank = updateTank delta model model.tank, tank2 = updateTank delta model model.tank2 }, Cmd.none )
+            ( { model
+                | tank = updateTank delta model model.tank
+                , tank2 = updateTank delta model model.tank2
+                , colliding =
+                    isCollided
+                        tankCollisionFriendliness
+                        model.tank.eb
+                        model.tank2.eb
+              }
+            , Cmd.none
+            )
 
         KeyDown key ->
             ( applyFuncToModelKeys model (addKey key), Cmd.none )
@@ -126,24 +129,23 @@ updateTank delta model tank =
 
 view : Model -> Svg.Svg Msg
 view model =
-    let
-        width =
-            "780"
-
-        height =
-            "640"
-    in
     Html.div []
-        [ svg
-            [ SvgA.viewBox ("0 0 " ++ width ++ " " ++ height)
-            , SvgA.width width
-            , SvgA.height height
-            , SvgA.style "background: #efefef; display: block; margin: auto;"
-            ]
-            [ viewEntity model.tank.eb 1
-            , viewEntity model.tank2.eb 1
-            ]
+        [ gameCanvas model
         , Html.div [] [ Html.text (model.keys |> Set.toList |> String.join ", ") ]
+        , Html.div [] [ Html.text (model.colliding |> Debug.toString) ]
+        ]
+
+
+gameCanvas : Model -> Svg.Svg msg
+gameCanvas model =
+    Svg.svg
+        [ SvgAttr.viewBox ("0 0 " ++ width ++ " " ++ height)
+        , SvgAttr.width width
+        , SvgAttr.height height
+        , SvgAttr.style "background: #efefef; display: block; margin: auto;"
+        ]
+        [ viewEntity model.tank.eb 1
+        , viewEntity model.tank2.eb 1
         ]
 
 

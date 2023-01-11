@@ -5,8 +5,12 @@ import Svg
 import Svg.Attributes as SvgA
 
 
+
+-- Base type
+
+
 type alias EntityBase =
-    { pos : Position
+    { pos : Position -- Center of entity for outside callers but technically is the right top corner and the image is moved when displaying to the "centered coords"
     , dim : Dimension
     , rot : Rotation
     , img : Image
@@ -128,6 +132,74 @@ viewEntity ent scale =
         , SvgA.style "image-rendering: pixelated;"
         ]
         []
+
+
+
+-- Collision
+
+
+{-| func (r Rect) Intersects(s Rect) bool {
+return !(s.Max.X < r.Min.X ||
+s.Min.X > r.Max.X ||
+s.Max.Y < r.Min.Y ||
+s.Min.Y > r.Max.Y)
+}
+-}
+isCollided : Float -> EntityBase -> EntityBase -> Bool
+isCollided friendliness e1 e2 =
+    let
+        minX1 =
+            e1.pos.x
+
+        maxX1 =
+            minX1 + e1.dim.width
+
+        minX2 =
+            e2.pos.x
+
+        maxX2 =
+            minX2 + e2.dim.width
+
+        minY1 =
+            e1.pos.y
+
+        maxY1 =
+            minY1 + e1.dim.height
+
+        minY2 =
+            e2.pos.y
+
+        maxY2 =
+            minY2 + e2.dim.height
+
+        -- Check if there is an overlap in the x-axis
+        xOverlap =
+            minX1
+                + friendliness
+                <= maxX2
+                - friendliness
+                && minX2
+                + friendliness
+                <= maxX1
+                - friendliness
+
+        -- Check if there is an overlap in the y-axis
+        yOverlap =
+            minY1
+                + friendliness
+                <= maxY2
+                - friendliness
+                && minY2
+                + friendliness
+                <= maxY1
+                - friendliness
+    in
+    -- Return true if there is overlap in both the x-axis and y-axis
+    xOverlap && yOverlap
+
+
+
+-- Keyboard control
 
 
 type alias KeyActionManager =
