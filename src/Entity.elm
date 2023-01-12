@@ -107,27 +107,27 @@ actAction delta action ent =
             { ent | pos = newPos }
 
 
-viewEntity : EntityBase -> Float -> Svg.Svg msg
-viewEntity ent scale =
+viewEntity : EntityBase -> Svg.Svg msg
+viewEntity ent =
     let
         centeredPos =
-            { x = ent.pos.x - ((ent.dim.width * scale) / 2)
-            , y = ent.pos.y - ((ent.dim.height * scale) / 2)
+            { x = ent.pos.x + (ent.dim.width / 2)
+            , y = ent.pos.y + (ent.dim.height / 2)
             }
 
         rotateString =
             "rotate("
                 ++ String.fromFloat ent.rot
                 ++ ","
-                ++ String.fromFloat ent.pos.x
+                ++ String.fromFloat centeredPos.x
                 ++ ","
-                ++ String.fromFloat ent.pos.y
+                ++ String.fromFloat centeredPos.y
                 ++ ")"
     in
     Svg.image
         [ SvgA.xlinkHref ent.img
-        , SvgA.x (String.fromFloat centeredPos.x)
-        , SvgA.y (String.fromFloat centeredPos.y)
+        , SvgA.x (String.fromFloat ent.pos.x)
+        , SvgA.y (String.fromFloat ent.pos.y)
         , SvgA.transform rotateString
         , SvgA.style "image-rendering: pixelated;"
         ]
@@ -138,15 +138,8 @@ viewEntity ent scale =
 -- Collision
 
 
-{-| func (r Rect) Intersects(s Rect) bool {
-return !(s.Max.X < r.Min.X ||
-s.Min.X > r.Max.X ||
-s.Max.Y < r.Min.Y ||
-s.Min.Y > r.Max.Y)
-}
--}
-isCollided : Float -> EntityBase -> EntityBase -> Bool
-isCollided friendliness e1 e2 =
+isCollided : EntityBase -> EntityBase -> Bool
+isCollided e1 e2 =
     let
         minX1 =
             e1.pos.x
@@ -174,25 +167,11 @@ isCollided friendliness e1 e2 =
 
         -- Check if there is an overlap in the x-axis
         xOverlap =
-            minX1
-                + friendliness
-                <= maxX2
-                - friendliness
-                && minX2
-                + friendliness
-                <= maxX1
-                - friendliness
+            minX1 <= maxX2 && minX2 <= maxX1
 
         -- Check if there is an overlap in the y-axis
         yOverlap =
-            minY1
-                + friendliness
-                <= maxY2
-                - friendliness
-                && minY2
-                + friendliness
-                <= maxY1
-                - friendliness
+            minY1 <= maxY2 && minY2 <= maxY1
     in
     -- Return true if there is overlap in both the x-axis and y-axis
     xOverlap && yOverlap

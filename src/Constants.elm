@@ -11,11 +11,6 @@ tankRotationSpeed =
     180
 
 
-tankCollisionFriendliness : Float
-tankCollisionFriendliness =
-    8
-
-
 width : String
 width =
     "780"

@@ -24,7 +24,7 @@ type alias Tank =
 initialTank : Tank
 initialTank =
     { eb =
-        { pos = initialPosition
+        { pos = { x = 0, y = 0 }
         , dim = initialDimension 64 64
         , rot = initialRotation
         , img = "assets/tank.png"
@@ -38,13 +38,13 @@ initialTank =
     }
 
 
-initialTank2 : Tank
-initialTank2 =
+initialBullet : Tank
+initialBullet =
     { eb =
         { pos = initialPosition
-        , dim = initialDimension 64 64
+        , dim = initialDimension 24 24
         , rot = initialRotation
-        , img = "assets/tank.png"
+        , img = "assets/bullet.png"
         }
     , keys =
         [ ( "w", MoveForward tankSpeed )
@@ -57,7 +57,7 @@ initialTank2 =
 
 type alias Model =
     { tank : Tank
-    , tank2 : Tank
+    , bullet : Tank
     , keys : KeysPressed
     , fps : Int
     , colliding : Bool
@@ -67,7 +67,7 @@ type alias Model =
 initialModel : () -> ( Model, Cmd Msg )
 initialModel _ =
     ( { tank = initialTank
-      , tank2 = initialTank2
+      , bullet = initialBullet
       , keys = initialKeysPressed
       , fps = 0
       , colliding = False
@@ -98,12 +98,11 @@ update msg model =
             in
             ( { model
                 | tank = updateTank delta model model.tank
-                , tank2 = updateTank delta model model.tank2
+                , bullet = updateTank delta model model.bullet
                 , colliding =
                     isCollided
-                        tankCollisionFriendliness
+                        model.bullet.eb
                         model.tank.eb
-                        model.tank2.eb
               }
             , Cmd.none
             )
@@ -144,8 +143,8 @@ gameCanvas model =
         , SvgAttr.height height
         , SvgAttr.style "background: #efefef; display: block; margin: auto;"
         ]
-        [ viewEntity model.tank.eb 1
-        , viewEntity model.tank2.eb 1
+        [ viewEntity model.tank.eb
+        , viewEntity model.bullet.eb
         ]
 
 
