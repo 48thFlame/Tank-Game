@@ -10,10 +10,10 @@ import Svg.Attributes as SvgA
 
 
 type alias EntityBase =
-    { pos : Position -- Center of entity for outside callers but technically is the right top corner and the image is moved when displaying to the "centered coords"
+    { pos : Position -- Top right corner
     , dim : Dimension
     , rot : Rotation
-    , img : Image
+    , img : Image -- The image path, such as `assets/ent.png`
     }
 
 
@@ -31,6 +31,12 @@ type alias Dimension =
 
 type alias Rotation =
     Float
+
+
+type alias Velocity =
+    { dx : Float
+    , dy : Float
+    }
 
 
 type alias Image =
@@ -62,6 +68,34 @@ initialDimension imageWidth imageHeight =
 initialRotation : Rotation
 initialRotation =
     0
+
+
+initialVelocity : Velocity
+initialVelocity =
+    { dx = 0, dy = 0 }
+
+
+applyVelocity :
+    { a | eb : EntityBase, vel : Velocity }
+    -> { a | eb : EntityBase, vel : Velocity }
+applyVelocity ent =
+    let
+        oldPos =
+            ent.eb.pos
+
+        newPos =
+            { oldPos
+                | x = oldPos.x + ent.vel.dx
+                , y = oldPos.y + ent.vel.dy
+            }
+
+        oldBase =
+            ent.eb
+
+        newBase =
+            { oldBase | pos = newPos }
+    in
+    { ent | eb = newBase }
 
 
 actAction : Float -> EntityAction -> EntityBase -> EntityBase
@@ -181,23 +215,22 @@ isCollided e1 e2 =
 -- Keyboard control
 
 
-type alias KeyActionManager =
-    List ( String, EntityAction )
+type alias KeyActionManager eMsg =
+    List ( String, eMsg )
 
 
 keyManagerUpdate :
-    Float
-    -> KeysPressed
-    -> { e | eb : EntityBase, keys : KeyActionManager }
-    -> { e | eb : EntityBase, keys : KeyActionManager }
-keyManagerUpdate delta keys ent =
+    KeysPressed
+    -> { e | keys : KeyActionManager eMsg }
+    -> List eMsg
+keyManagerUpdate keysPressed ent =
     let
-        handle : ( String, EntityAction ) -> EntityBase -> EntityBase
-        handle pair eb =
-            if isPressed (Tuple.first pair) keys then
-                actAction delta (Tuple.second pair) eb
+        pairToEMsg : ( String, eMsg ) -> Maybe eMsg
+        pairToEMsg pair =
+            if isPressed (Tuple.first pair) keysPressed then
+                Just (Tuple.second pair)
 
             else
-                eb
+                Nothing
     in
-    { ent | eb = List.foldl handle ent.eb ent.keys }
+    List.filterMap pairToEMsg ent.keys
