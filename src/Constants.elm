@@ -11,11 +11,26 @@ tankRotationSpeed =
     180
 
 
-width : String
+tankGoodShotTime : Float
+tankGoodShotTime =
+    10
+
+
+tankAddToShotCoolDown : Float
+tankAddToShotCoolDown =
+    1
+
+
+bulletSpeed : Float
+bulletSpeed =
+    160
+
+
+width : Float
 width =
-    "780"
+    780
 
 
-height : String
+height : Float
 height =
-    "640"
+    640

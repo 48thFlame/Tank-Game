@@ -78,10 +78,17 @@ view model =
 
 gameCanvas : Model -> Svg.Svg msg
 gameCanvas model =
+    let
+        stringedWidth =
+            String.fromFloat width
+
+        stringedHeight =
+            String.fromFloat height
+    in
     Svg.svg
-        [ SvgAttr.viewBox ("0 0 " ++ width ++ " " ++ height)
-        , SvgAttr.width width
-        , SvgAttr.height height
+        [ SvgAttr.viewBox ("0 0 " ++ stringedWidth ++ " " ++ stringedHeight)
+        , SvgAttr.width stringedWidth
+        , SvgAttr.height stringedHeight
         , SvgAttr.style "background: #efefef; display: block; margin: auto;"
         ]
         [ viewTank model.tank ]

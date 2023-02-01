@@ -57,11 +57,11 @@ type EntityAction
 
 initialPosition : Position
 initialPosition =
-    { x = 320, y = 240 }
+    { x = 0, y = 0 }
 
 
-initialDimension : Float -> Float -> Dimension
-initialDimension imageWidth imageHeight =
+newDimension : Float -> Float -> Dimension
+newDimension imageWidth imageHeight =
     { width = imageWidth, height = imageHeight }
 
 
@@ -76,26 +76,20 @@ initialVelocity =
 
 
 applyVelocity :
-    { a | eb : EntityBase, vel : Velocity }
+    Float
     -> { a | eb : EntityBase, vel : Velocity }
-applyVelocity ent =
-    let
-        oldPos =
-            ent.eb.pos
+    -> { a | eb : EntityBase, vel : Velocity }
+applyVelocity delta ent =
+    { ent
+        | eb =
+            actAction delta (MoveUpDown ent.vel.dy) ent.eb
+                |> actAction delta (MoveLeftRight ent.vel.dx)
+    }
 
-        newPos =
-            { oldPos
-                | x = oldPos.x + ent.vel.dx
-                , y = oldPos.y + ent.vel.dy
-            }
 
-        oldBase =
-            ent.eb
-
-        newBase =
-            { oldBase | pos = newPos }
-    in
-    { ent | eb = newBase }
+getCenterPos : EntityBase -> Position
+getCenterPos e =
+    { x = e.pos.x + (e.dim.width / 2), y = e.pos.y + (e.dim.height / 2) }
 
 
 actAction : Float -> EntityAction -> EntityBase -> EntityBase
@@ -126,19 +120,28 @@ actAction delta action ent =
 
         MoveForward v ->
             let
-                radii =
-                    degrees ent.rot
+                xy =
+                    getXY v ent.rot
 
                 x =
-                    ent.pos.x + (v * delta * cos radii)
+                    ent.pos.x + (delta * Tuple.first xy)
 
                 y =
-                    ent.pos.y + (v * delta * sin radii)
+                    ent.pos.y + (delta * Tuple.second xy)
 
                 newPos =
                     { x = x, y = y }
             in
             { ent | pos = newPos }
+
+
+getXY : Float -> Float -> ( Float, Float )
+getXY v rot =
+    let
+        radii =
+            degrees rot
+    in
+    ( v * cos radii, v * sin radii )
 
 
 viewEntity : EntityBase -> Svg.Svg msg
