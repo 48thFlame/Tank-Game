@@ -14,14 +14,14 @@ import Svg
 
 
 type alias Model =
-    { tank : Tank
+    { gs : GameState
     , keys : KeysPressed
     }
 
 
 initialModel : () -> ( Model, Cmd Msg )
 initialModel _ =
-    ( { tank = initialTank
+    ( { gs = newGameState
       , keys = initialKeysPressed
       }
     , Cmd.none
@@ -48,7 +48,7 @@ update msg model =
                 delta =
                     deltaTime / 1000
             in
-            ( { model | tank = mainToCallUpdateTank delta model model.tank }
+            ( { model | gs = updateGameState delta model.keys model.gs }
             , Cmd.none
             )
 
@@ -72,7 +72,7 @@ update msg model =
 view : Model -> Svg.Svg Msg
 view model =
     Html.div []
-        [ gameCanvas model
+        [ gameCanvas model.gs
         , Html.div [] [ Html.text (model.keys |> Set.toList |> String.join ", ") ]
         ]
 

@@ -6,6 +6,14 @@ import Svg
 import Svg.Attributes as SvgA
 
 
+
+-- "Model"
+
+
+type alias GameState =
+    { tank : Tank }
+
+
 type alias Bullet =
     { eb : EntityBase
     , vel : Velocity
@@ -18,6 +26,11 @@ type alias Tank =
     , bullets : List Bullet
     , coolDown : Float
     }
+
+
+newGameState : GameState
+newGameState =
+    { tank = initialTank }
 
 
 initialTank : Tank
@@ -56,22 +69,37 @@ newBullet pos rot =
     }
 
 
+
+-- "Update"
+
+
+updateGameState : Float -> KeysPressed -> GameState -> GameState
+updateGameState delta keys gs =
+    { gs | tank = updateTank delta keys gs.tank }
+
+
 type TankMsg
     = Action EntityAction
     | Fire
 
 
+updateTank : Float -> KeysPressed -> Tank -> Tank
+updateTank delta keys tank =
+    mapTankToMsgs delta (getTankMsgs keys tank) tank |> updateTankBullets delta
+
+
 {-| Returns all `TankMsg`s
 -}
-getTankMsgs : { m | keys : KeysPressed } -> Tank -> List TankMsg
-getTankMsgs model tank =
-    keyManagerUpdate model.keys tank
+getTankMsgs : KeysPressed -> Tank -> List TankMsg
+getTankMsgs keys tank =
+    keyManagerUpdate keys tank
 
 
-msgsMapTankUpdate : Float -> { m | keys : KeysPressed } -> Tank -> Tank
-msgsMapTankUpdate delta model tank =
-    -- Gets all `TankMsg`s and calls `updateTank` one at a time updating the `tank`
-    List.foldl (msgUpdateTank delta) tank (getTankMsgs model tank)
+{-| Using all msgs calls `updateTank` one at a time updating the `tank`
+-}
+mapTankToMsgs : Float -> List TankMsg -> Tank -> Tank
+mapTankToMsgs delta msgs tank =
+    List.foldl (msgUpdateTank delta) tank msgs
 
 
 {-| Similar to `update` in every Elm program, just for the tank
@@ -132,29 +160,12 @@ removeBulletsOutside dim lb =
         lb
 
 
-mainToCallUpdateTank : Float -> { m | keys : KeysPressed } -> Tank -> Tank
-mainToCallUpdateTank delta model tank =
-    msgsMapTankUpdate delta model tank |> updateTankBullets delta
+
+-- "View"
 
 
-viewTank : Tank -> Svg.Svg msg
-viewTank tank =
-    let
-        viewBullet b =
-            viewEntity b.eb
-
-        bulletsSvg =
-            List.map viewBullet tank.bullets
-    in
-    Svg.g []
-        (viewEntity tank.eb :: bulletsSvg)
-
-
-
--- gameCanvas : Model -> Svg.Svg msg
-
-
-gameCanvas model =
+gameCanvas : GameState -> Svg.Svg msg
+gameCanvas gs =
     let
         stringedWidth =
             String.fromFloat width
@@ -168,4 +179,17 @@ gameCanvas model =
         , SvgA.height stringedHeight
         , SvgA.style "background: #efefef; display: block; margin: auto;"
         ]
-        [ viewTank model.tank ]
+        [ viewTank gs.tank ]
+
+
+viewTank : Tank -> Svg.Svg msg
+viewTank tank =
+    let
+        viewBullet b =
+            viewEntity b.eb
+
+        bulletsSvg =
+            List.map viewBullet tank.bullets
+    in
+    Svg.g []
+        (viewEntity tank.eb :: bulletsSvg)
