@@ -2,13 +2,11 @@ module Main exposing (main)
 
 import Browser
 import Browser.Events as Events
-import Constants exposing (height, width)
+import Engine exposing (..)
 import Game exposing (..)
 import Html
-import Keys exposing (..)
 import Set
 import Svg
-import Svg.Attributes as SvgAttr
 
 
 
@@ -55,12 +53,15 @@ update msg model =
             )
 
         KeyDown key ->
+            -- add key to model.keys
             ( applyFuncToModelKeys model (addKey key), Cmd.none )
 
         KeyUp key ->
+            -- remove key from model.keys
             ( applyFuncToModelKeys model (removeKey key), Cmd.none )
 
         Blur _ ->
+            -- clear model.keys
             ( applyFuncToModelKeys model clearKeys, Cmd.none )
 
 
@@ -74,24 +75,6 @@ view model =
         [ gameCanvas model
         , Html.div [] [ Html.text (model.keys |> Set.toList |> String.join ", ") ]
         ]
-
-
-gameCanvas : Model -> Svg.Svg msg
-gameCanvas model =
-    let
-        stringedWidth =
-            String.fromFloat width
-
-        stringedHeight =
-            String.fromFloat height
-    in
-    Svg.svg
-        [ SvgAttr.viewBox ("0 0 " ++ stringedWidth ++ " " ++ stringedHeight)
-        , SvgAttr.width stringedWidth
-        , SvgAttr.height stringedHeight
-        , SvgAttr.style "background: #efefef; display: block; margin: auto;"
-        ]
-        [ viewTank model.tank ]
 
 
 

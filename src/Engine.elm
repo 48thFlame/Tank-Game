@@ -1,12 +1,54 @@
-module Entity exposing (..)
+module Engine exposing (..)
 
-import Keys exposing (..)
+import Json.Decode as Decode
+import Set
 import Svg
 import Svg.Attributes as SvgA
 
 
+type alias KeysPressed =
+    Set.Set String
 
--- Base type
+
+initialKeysPressed : Set.Set String
+initialKeysPressed =
+    Set.empty
+
+
+addKey : String -> KeysPressed -> KeysPressed
+addKey key s =
+    Set.insert key s
+
+
+removeKey : String -> KeysPressed -> KeysPressed
+removeKey key s =
+    Set.remove key s
+
+
+clearKeys : KeysPressed -> KeysPressed
+clearKeys _ =
+    Set.empty
+
+
+isPressed : String -> KeysPressed -> Bool
+isPressed key s =
+    Set.member key s
+
+
+{-| Takes in a msg that holds a `String`
+-}
+keyDecoder : (String -> msg) -> Decode.Decoder msg
+keyDecoder m =
+    Decode.map m (Decode.field "key" Decode.string)
+
+
+applyFuncToModelKeys : { m | keys : KeysPressed } -> (KeysPressed -> KeysPressed) -> { m | keys : KeysPressed }
+applyFuncToModelKeys model func =
+    { model | keys = func model.keys }
+
+
+
+-- base entity type
 
 
 type alias EntityBase =
@@ -55,9 +97,9 @@ type EntityAction
     | MoveForward Float
 
 
-initialPosition : Position
-initialPosition =
-    { x = 0, y = 0 }
+newPosition : Float -> Float -> Position
+newPosition x y =
+    { x = x, y = y }
 
 
 newDimension : Float -> Float -> Dimension

@@ -1,9 +1,9 @@
 module Game exposing (..)
 
 import Constants exposing (..)
-import Entity exposing (..)
-import Keys exposing (KeysPressed)
+import Engine exposing (..)
 import Svg
+import Svg.Attributes as SvgA
 
 
 type alias Bullet =
@@ -23,13 +23,17 @@ type alias Tank =
 initialTank : Tank
 initialTank =
     { eb =
-        { pos = { x = 0, y = 0 }
+        { pos = newPosition 0 0
         , dim = newDimension 64 64
         , rot = initialRotation
         , img = "assets/tank.png"
         }
     , keys =
-        [ ( "ArrowUp", Action (MoveForward tankSpeed) ), ( "ArrowLeft", Action (Rotate -tankRotationSpeed) ), ( "ArrowRight", Action (Rotate tankRotationSpeed) ), ( "ArrowDown", Fire ) ]
+        [ ( "ArrowUp", Action (MoveForward tankSpeed) )
+        , ( "ArrowLeft", Action (Rotate -tankRotationSpeed) )
+        , ( "ArrowRight", Action (Rotate tankRotationSpeed) )
+        , ( "ArrowDown", Fire )
+        ]
     , bullets = []
     , coolDown = 0
     }
@@ -119,7 +123,7 @@ removeBulletsOutside dim lb =
     -- make the "canvas" to entity and check collision
     let
         canvasEnt =
-            { dim = dim, pos = initialPosition, rot = initialRotation, img = "" }
+            { dim = dim, pos = newPosition 0 0, rot = initialRotation, img = "" }
     in
     List.filter
         (\b ->
@@ -144,3 +148,24 @@ viewTank tank =
     in
     Svg.g []
         (viewEntity tank.eb :: bulletsSvg)
+
+
+
+-- gameCanvas : Model -> Svg.Svg msg
+
+
+gameCanvas model =
+    let
+        stringedWidth =
+            String.fromFloat width
+
+        stringedHeight =
+            String.fromFloat height
+    in
+    Svg.svg
+        [ SvgA.viewBox ("0 0 " ++ stringedWidth ++ " " ++ stringedHeight)
+        , SvgA.width stringedWidth
+        , SvgA.height stringedHeight
+        , SvgA.style "background: #efefef; display: block; margin: auto;"
+        ]
+        [ viewTank model.tank ]
