@@ -279,3 +279,17 @@ keyManagerUpdate keysPressed ent =
                 Nothing
     in
     List.filterMap pairToEMsg ent.keys
+
+
+
+-- Util functions
+
+
+radToDeg : Float -> Float
+radToDeg rad =
+    rad * 180 / pi
+
+
+getRandomInRange : Float -> Float -> Float -> Float
+getRandomInRange ran min max =
+    ran * (max - min) + min

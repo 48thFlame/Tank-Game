@@ -1,10 +1,12 @@
 module Main exposing (main)
 
+import Array
 import Browser
 import Browser.Events as Events
 import Engine exposing (..)
 import Game exposing (..)
 import Html
+import Random
 import Set
 import Svg
 
@@ -16,6 +18,7 @@ import Svg
 type alias Model =
     { gs : GameState
     , keys : KeysPressed
+    , ran : RandType
     }
 
 
@@ -23,6 +26,7 @@ initialModel : () -> ( Model, Cmd Msg )
 initialModel _ =
     ( { gs = newGameState
       , keys = initialKeysPressed
+      , ran = { a = 0, b = 0, c = 0 }
       }
     , Cmd.none
     )
@@ -34,6 +38,7 @@ initialModel _ =
 
 type Msg
     = OnAnimationFrame Float
+    | NewRandom (List Float)
     | KeyDown String
     | KeyUp String
     | Blur Events.Visibility
@@ -48,9 +53,30 @@ update msg model =
                 delta =
                     deltaTime / 1000
             in
-            ( { model | gs = updateGameState delta model.keys model.gs }
-            , Cmd.none
+            ( { model | gs = updateGameState delta model.ran model.keys model.gs }
+            , Random.generate NewRandom (Random.list 3 (Random.float 0 1))
             )
+
+        NewRandom numsList ->
+            let
+                getNumFromMaybe : Maybe Float -> Float
+                getNumFromMaybe mf =
+                    case mf of
+                        Just a ->
+                            a
+
+                        Nothing ->
+                            0
+
+                nums : Array.Array Float
+                nums =
+                    Array.fromList numsList
+
+                getNum : Int -> Float
+                getNum i =
+                    Array.get i nums |> getNumFromMaybe
+            in
+            ( { model | ran = { a = getNum 0, b = getNum 1, c = getNum 2 } }, Cmd.none )
 
         KeyDown key ->
             -- add key to model.keys

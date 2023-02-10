@@ -1,6 +1,41 @@
 module Constants exposing (..)
 
 
+tankWidth : Float
+tankWidth =
+    64
+
+
+tankHeight : Float
+tankHeight =
+    64
+
+
+planeWidth : Float
+planeWidth =
+    128
+
+
+planeHeight : Float
+planeHeight =
+    128
+
+
+missileMaxTime : Float
+missileMaxTime =
+    6
+
+
+missileAddToTime : Float
+missileAddToTime =
+    1
+
+
+missileSpeed : Float
+missileSpeed =
+    100
+
+
 tankSpeed : Float
 tankSpeed =
     140
@@ -8,7 +43,7 @@ tankSpeed =
 
 tankRotationSpeed : Float
 tankRotationSpeed =
-    180
+    160
 
 
 tankGoodShotTime : Float
@@ -18,7 +53,17 @@ tankGoodShotTime =
 
 tankAddToShotCoolDown : Float
 tankAddToShotCoolDown =
-    1
+    50
+
+
+bulletWidth : Float
+bulletWidth =
+    16
+
+
+bulletHeight : Float
+bulletHeight =
+    16
 
 
 bulletSpeed : Float
