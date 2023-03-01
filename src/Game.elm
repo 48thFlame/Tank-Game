@@ -11,7 +11,7 @@ import Svg.Attributes as SvgA
 
 
 type alias GameState =
-    { tank : Tank, enemy : Enemy }
+    { tank : Tank, boss : Boss }
 
 
 type alias RandType =
@@ -37,7 +37,7 @@ type alias Tank =
 
 newGameState : GameState
 newGameState =
-    { tank = initialTank, enemy = newPlane }
+    { tank = initialTank, boss = newBoss }
 
 
 initialTank : Tank
@@ -82,8 +82,10 @@ newBullet pos rot =
     }
 
 
-type alias Enemy =
+type alias Boss =
     { eb : EntityBase
+    , dest : Position
+    , dist : Float
     , projectiles : List Missile
     }
 
@@ -94,21 +96,29 @@ type alias Missile =
     }
 
 
-newPlane : Enemy
-newPlane =
+newBoss : Boss
+newBoss =
     let
+        pos =
+            newPosition
+                ((width / 2) - (bossWidth / 2))
+                ((height / 2) - (bossHeight / 2))
+
+        dest =
+            newPosition 100 100
+
         planeEb =
-            { pos =
-                -- middle
-                newPosition
-                    ((width / 2) - (planeWidth / 2))
-                    ((height / 2) - (planeHeight / 2))
-            , dim = newDimension planeWidth planeHeight
-            , rot = initialRotation
-            , img = "assets/plane.png"
+            { pos = pos
+
+            -- middle
+            , dim = newDimension bossWidth bossHeight
+            , rot = getRotation pos dest
+            , img = "assets/boss.png"
             }
     in
     { eb = planeEb
+    , dest = dest
+    , dist = getDistance dest planeEb.pos + bossDestBuffer
     , projectiles = [ newMissile (getCenterPos planeEb) ]
     }
 
@@ -133,44 +143,61 @@ updateGameState : Float -> RandType -> KeysPressed -> GameState -> GameState
 updateGameState delta ran keys gs =
     { gs
         | tank = updateTank delta keys gs.tank
-        , enemy = updateEnemy delta ran gs.tank gs.enemy
+        , boss = updateBoss delta ran gs.tank gs.boss
     }
 
 
-updateEnemy : Float -> RandType -> Tank -> Enemy -> Enemy
-updateEnemy delta ran tank e =
-    { e
-        | eb = updateEnemyEb ran e.eb
+updateBoss : Float -> RandType -> Tank -> Boss -> Boss
+updateBoss delta rand tank boss =
+    let
+        bEb =
+            boss.eb
+
+        shouldNewDest =
+            boss.dist < 0
+
+        newRot =
+            getRotation bEb.pos boss.dest
+
+        newDest =
+            let
+                _ =
+                    Debug.log "here"
+            in
+            if shouldNewDest then
+                newPosition
+                    (getRandomInRange
+                        rand.b
+                        bossDestBuffer
+                        (width - boss.eb.dim.width - bossDestBuffer)
+                    )
+                    (getRandomInRange rand.c bossDestBuffer (height - boss.eb.dim.height - bossDestBuffer))
+
+            else
+                boss.dest
+
+        amountForward : Float
+        amountForward =
+            delta * bossSpeed
+
+        _ =
+            Debug.log "stuff:" { shouldNewDest = shouldNewDest, amountForward = amountForward, dist = boss.dist }
+    in
+    { boss
+        | eb = faceRotation bEb newRot |> actAction delta (MoveForward bossSpeed)
+        , dest = newDest
+        , dist =
+            if shouldNewDest then
+                getDistance newDest bEb.pos
+
+            else
+                boss.dist - amountForward
         , projectiles =
-            newMissile (getCenterPos e.eb)
-                :: e.projectiles
+            newMissile (getCenterPos boss.eb)
+                :: boss.projectiles
                 |> List.map (updateMissile delta tank)
                 |> filterMissiles
     }
-
-
-updateEnemyEb : RandType -> EntityBase -> EntityBase
-updateEnemyEb ran eb =
-    let
-        num1 =
-            ran.a
-
-        num2 =
-            ran.b
-
-        num3 =
-            ran.c
-    in
-    if num3 > 0.6 then
-        { eb
-            | pos =
-                newPosition
-                    (getRandomInRange num1 0 (width - eb.dim.width + 1))
-                    (getRandomInRange num2 0 (height - eb.dim.height + 1))
-        }
-
-    else
-        eb
 
 
 updateMissile : Float -> Tank -> Missile -> Missile
@@ -190,29 +217,7 @@ updateMissile delta tank m =
 
 getMissileAngle : Tank -> Missile -> Float
 getMissileAngle tank m =
-    let
-        mEb =
-            m.eb
-
-        tEb =
-            tank.eb
-
-        mPos =
-            getCenterPos mEb
-
-        tPos =
-            getCenterPos tEb
-
-        yMy =
-            tPos.y - mPos.y
-
-        xMx =
-            tPos.x - mPos.x
-
-        radians =
-            atan2 yMy xMx
-    in
-    radToDeg radians
+    getRotation (getCenterPos m.eb) (getCenterPos tank.eb)
 
 
 filterMissiles : List Missile -> List Missile
@@ -357,7 +362,7 @@ gameCanvas gs =
         , SvgA.height stringedHeight
         , SvgA.style "background: #efefef; display: block; margin: auto;"
         ]
-        [ viewObj gs.tank, viewObj gs.enemy ]
+        [ viewObj gs.tank, viewObj gs.boss ]
 
 
 viewObj :

@@ -1,5 +1,7 @@
 module Constants exposing (..)
 
+-- tank
+
 
 tankWidth : Float
 tankWidth =
@@ -9,31 +11,6 @@ tankWidth =
 tankHeight : Float
 tankHeight =
     64
-
-
-planeWidth : Float
-planeWidth =
-    128
-
-
-planeHeight : Float
-planeHeight =
-    128
-
-
-missileMaxTime : Float
-missileMaxTime =
-    6
-
-
-missileAddToTime : Float
-missileAddToTime =
-    1
-
-
-missileSpeed : Float
-missileSpeed =
-    100
 
 
 tankSpeed : Float
@@ -56,6 +33,10 @@ tankAddToShotCoolDown =
     50
 
 
+
+-- tank - bullet
+
+
 bulletWidth : Float
 bulletWidth =
     16
@@ -69,6 +50,49 @@ bulletHeight =
 bulletSpeed : Float
 bulletSpeed =
     160
+
+
+
+-- boss
+
+
+bossWidth : Float
+bossWidth =
+    128
+
+
+bossHeight : Float
+bossHeight =
+    128
+
+
+bossSpeed : Float
+bossSpeed =
+    80
+
+
+bossDestBuffer : Float
+bossDestBuffer =
+    40
+
+
+
+-- boss - missile
+
+
+missileMaxTime : Float
+missileMaxTime =
+    6
+
+
+missileAddToTime : Float
+missileAddToTime =
+    1
+
+
+missileSpeed : Float
+missileSpeed =
+    100
 
 
 width : Float

@@ -186,6 +186,40 @@ getXY v rot =
     ( v * cos radii, v * sin radii )
 
 
+{-| Return angle for `posA` to look at `posB`
+-}
+getRotation : Position -> Position -> Float
+getRotation posA posB =
+    let
+        yMy =
+            posB.y - posA.y
+
+        xMx =
+            posB.x - posA.x
+
+        radians =
+            atan2 yMy xMx
+    in
+    radToDeg radians
+
+
+faceRotation : EntityBase -> Float -> EntityBase
+faceRotation eb rot =
+    { eb | rot = rot }
+
+
+getDistance : Position -> Position -> Float
+getDistance pos1 pos2 =
+    let
+        dx =
+            pos2.x - pos1.x
+
+        dy =
+            pos2.y - pos1.y
+    in
+    sqrt (dx * dx + dy * dy)
+
+
 viewEntity : EntityBase -> Svg.Svg msg
 viewEntity ent =
     let
