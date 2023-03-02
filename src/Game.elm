@@ -14,13 +14,6 @@ type alias GameState =
     { tank : Tank, boss : Boss }
 
 
-type alias RandType =
-    { a : Float
-    , b : Float
-    , c : Float
-    }
-
-
 type alias Bullet =
     { eb : EntityBase
     , vel : Velocity
@@ -86,6 +79,7 @@ type alias Boss =
     { eb : EntityBase
     , dest : Position
     , dist : Float
+    , coolDown : Float
     , projectiles : List Missile
     }
 
@@ -99,26 +93,23 @@ type alias Missile =
 newBoss : Boss
 newBoss =
     let
-        pos =
+        startPos =
+            -- middle
             newPosition
                 ((width / 2) - (bossWidth / 2))
                 ((height / 2) - (bossHeight / 2))
 
-        dest =
-            newPosition 100 100
-
         planeEb =
-            { pos = pos
-
-            -- middle
+            { pos = startPos
             , dim = newDimension bossWidth bossHeight
-            , rot = getRotation pos dest
+            , rot = 0
             , img = "assets/boss.png"
             }
     in
     { eb = planeEb
-    , dest = dest
-    , dist = getDistance dest planeEb.pos + bossDestBuffer
+    , dest = startPos
+    , dist = -1
+    , coolDown = 0
     , projectiles = [ newMissile (getCenterPos planeEb) ]
     }
 
@@ -139,17 +130,23 @@ newMissile pos =
 -- "Update"
 
 
-updateGameState : Float -> RandType -> KeysPressed -> GameState -> GameState
-updateGameState delta ran keys gs =
+updateGameState : Float -> Float -> KeysPressed -> GameState -> GameState
+updateGameState delta rand keys gs =
     { gs
         | tank = updateTank delta keys gs.tank
-        , boss = updateBoss delta ran gs.tank gs.boss
+        , boss = updateBoss delta rand gs.tank gs.boss
     }
 
 
-updateBoss : Float -> RandType -> Tank -> Boss -> Boss
+updateBoss : Float -> Float -> Tank -> Boss -> Boss
 updateBoss delta rand tank boss =
     let
+        a =
+            lcgRandom rand
+
+        b =
+            lcgRandom a
+
         bEb =
             boss.eb
 
@@ -159,19 +156,24 @@ updateBoss delta rand tank boss =
         newRot =
             getRotation bEb.pos boss.dest
 
-        newDest =
-            let
-                _ =
-                    Debug.log "here"
-            in
+        newDest ra rb =
             if shouldNewDest then
-                newPosition
-                    (getRandomInRange
-                        rand.b
-                        bossDestBuffer
-                        (width - boss.eb.dim.width - bossDestBuffer)
-                    )
-                    (getRandomInRange rand.c bossDestBuffer (height - boss.eb.dim.height - bossDestBuffer))
+                let
+                    pos =
+                        newPosition
+                            (getRandomInRange
+                                ra
+                                bossDestBuffer
+                                (width - boss.eb.dim.width - bossDestBuffer)
+                            )
+                            (getRandomInRange rb bossDestBuffer (height - boss.eb.dim.height - bossDestBuffer))
+                in
+                -- if too close try again
+                if getDistance pos bEb.pos < bossDestBuffer then
+                    newDest (lcgRandom ra) (lcgRandom rb)
+
+                else
+                    pos
 
             else
                 boss.dest
@@ -180,23 +182,39 @@ updateBoss delta rand tank boss =
         amountForward =
             delta * bossSpeed
 
-        _ =
-            Debug.log "stuff:" { shouldNewDest = shouldNewDest, amountForward = amountForward, dist = boss.dist }
+        canShoot : Bool
+        canShoot =
+            boss.coolDown + delta > boosShotCoolDown
+
+        projs : List Missile
+        projs =
+            if canShoot then
+                newMissile (getCenterPos boss.eb)
+                    :: boss.projectiles
+
+            else
+                boss.projectiles
+
+        filteredProjs : List Missile
+        filteredProjs =
+            projs |> List.map (updateMissile delta tank) |> filterMissiles
     in
     { boss
         | eb = faceRotation bEb newRot |> actAction delta (MoveForward bossSpeed)
-        , dest = newDest
+        , dest = newDest a b
         , dist =
             if shouldNewDest then
-                getDistance newDest bEb.pos
+                getDistance (newDest a b) bEb.pos
 
             else
                 boss.dist - amountForward
-        , projectiles =
-            newMissile (getCenterPos boss.eb)
-                :: boss.projectiles
-                |> List.map (updateMissile delta tank)
-                |> filterMissiles
+        , projectiles = filteredProjs
+        , coolDown =
+            if canShoot then
+                0
+
+            else
+                boss.coolDown + delta
     }
 
 

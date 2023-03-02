@@ -324,6 +324,27 @@ radToDeg rad =
     rad * 180 / pi
 
 
+lcgRandom : Float -> Float
+lcgRandom seed =
+    let
+        modulus =
+            2 ^ 32
+
+        multiplier =
+            1664525
+
+        increment =
+            1013904223
+
+        a =
+            floor (seed * modulus)
+
+        b =
+            modBy modulus (multiplier * a + increment)
+    in
+    toFloat b / modulus
+
+
 getRandomInRange : Float -> Float -> Float -> Float
 getRandomInRange ran min max =
     ran * (max - min) + min

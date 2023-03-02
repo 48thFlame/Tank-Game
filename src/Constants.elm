@@ -15,7 +15,7 @@ tankHeight =
 
 tankSpeed : Float
 tankSpeed =
-    140
+    150
 
 
 tankRotationSpeed : Float
@@ -68,12 +68,17 @@ bossHeight =
 
 bossSpeed : Float
 bossSpeed =
-    80
+    120
 
 
 bossDestBuffer : Float
 bossDestBuffer =
-    40
+    60
+
+
+boosShotCoolDown : Float
+boosShotCoolDown =
+    0.96
 
 
 
@@ -82,7 +87,7 @@ bossDestBuffer =
 
 missileMaxTime : Float
 missileMaxTime =
-    6
+    4.5
 
 
 missileAddToTime : Float
@@ -92,7 +97,7 @@ missileAddToTime =
 
 missileSpeed : Float
 missileSpeed =
-    100
+    80
 
 
 width : Float
