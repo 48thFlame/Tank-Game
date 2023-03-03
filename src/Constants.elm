@@ -23,14 +23,9 @@ tankRotationSpeed =
     160
 
 
-tankGoodShotTime : Float
-tankGoodShotTime =
-    10
-
-
-tankAddToShotCoolDown : Float
-tankAddToShotCoolDown =
-    50
+tankCoolDown : Float
+tankCoolDown =
+    0.25
 
 
 

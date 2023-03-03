@@ -141,12 +141,10 @@ updateGameState delta rand keys gs =
 updateBoss : Float -> Float -> Tank -> Boss -> Boss
 updateBoss delta rand tank boss =
     let
-        a =
-            lcgRandom rand
-
-        b =
-            lcgRandom a
-
+        -- a =
+        --     lcgRandom rand
+        -- b =
+        --     lcgRandom a
         bEb =
             boss.eb
 
@@ -156,21 +154,27 @@ updateBoss delta rand tank boss =
         newRot =
             getRotation bEb.pos boss.dest
 
-        newDest ra rb =
+        newDest seed =
             if shouldNewDest then
                 let
+                    a =
+                        lcgRandom seed
+
+                    b =
+                        lcgRandom a
+
                     pos =
                         newPosition
                             (getRandomInRange
-                                ra
+                                a
                                 bossDestBuffer
                                 (width - boss.eb.dim.width - bossDestBuffer)
                             )
-                            (getRandomInRange rb bossDestBuffer (height - boss.eb.dim.height - bossDestBuffer))
+                            (getRandomInRange b bossDestBuffer (height - boss.eb.dim.height - bossDestBuffer))
                 in
                 -- if too close try again
                 if getDistance pos bEb.pos < bossDestBuffer then
-                    newDest (lcgRandom ra) (lcgRandom rb)
+                    newDest b
 
                 else
                     pos
@@ -198,13 +202,16 @@ updateBoss delta rand tank boss =
         filteredProjs : List Missile
         filteredProjs =
             projs |> List.map (updateMissile delta tank) |> filterMissiles
+
+        dest =
+            newDest rand
     in
     { boss
         | eb = faceRotation bEb newRot |> actAction delta (MoveForward bossSpeed)
-        , dest = newDest a b
+        , dest = dest
         , dist =
             if shouldNewDest then
-                getDistance (newDest a b) bEb.pos
+                getDistance dest bEb.pos
 
             else
                 boss.dist - amountForward
@@ -254,7 +261,9 @@ type TankMsg
 
 updateTank : Float -> KeysPressed -> Tank -> Tank
 updateTank delta keys tank =
-    mapTankToMsgs delta (getTankMsgs keys tank) tank |> updateTankOutside |> updateTankBullets delta
+    mapTankToMsgs delta (getTankMsgs keys tank) tank
+        |> updateTankOutside
+        |> updateTankBullets delta
 
 
 {-| Returns all `TankMsg`s
@@ -280,7 +289,7 @@ msgUpdateTank delta tMsg tank =
             { tank | eb = actAction delta entAction tank.eb }
 
         Fire ->
-            if canFire tank delta tankGoodShotTime then
+            if canFire tank delta tankCoolDown then
                 tankFire tank
 
             else
@@ -338,7 +347,7 @@ updateTankBullets delta tank =
         | projectiles =
             moveBullets delta tank.projectiles
                 |> removeBulletsOutside (newDimension width height)
-        , coolDown = tank.coolDown + (tankAddToShotCoolDown * delta)
+        , coolDown = tank.coolDown + delta
     }
 
 
