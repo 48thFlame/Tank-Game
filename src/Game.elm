@@ -25,6 +25,7 @@ type alias Tank =
     , keys : KeyActionManager TankMsg
     , projectiles : List Bullet
     , coolDown : Float
+    , health : Float
     }
 
 
@@ -55,6 +56,7 @@ initialTank =
         ]
     , projectiles = []
     , coolDown = 0
+    , health = initialHealth
     }
 
 
@@ -81,6 +83,7 @@ type alias Boss =
     , dist : Float
     , coolDown : Float
     , projectiles : List Missile
+    , health : Float
     }
 
 
@@ -99,18 +102,19 @@ newBoss =
                 ((width / 2) - (bossWidth / 2))
                 ((height / 2) - (bossHeight / 2))
 
-        planeEb =
+        bossEb =
             { pos = startPos
             , dim = newDimension bossWidth bossHeight
             , rot = 0
             , img = "assets/boss.png"
             }
     in
-    { eb = planeEb
+    { eb = bossEb
     , dest = startPos
     , dist = -1
     , coolDown = 0
-    , projectiles = [ newMissile (getCenterPos planeEb) ]
+    , projectiles = [ newMissile (getCenterPos bossEb) ]
+    , health = initialHealth
     }
 
 
@@ -389,7 +393,7 @@ gameCanvas gs =
         , SvgA.height stringedHeight
         , SvgA.style "background: #efefef; display: block; margin: auto;"
         ]
-        [ viewObj gs.tank, viewObj gs.boss ]
+        [ viewHealthBar gs.tank, viewObj gs.tank, viewHealthBar gs.boss, viewObj gs.boss ]
 
 
 viewObj :
@@ -408,3 +412,51 @@ viewObj obj =
     in
     Svg.g []
         (viewEntity obj.eb :: projectilesSvg)
+
+
+viewHealthBar : { a | eb : EntityBase, health : Float } -> Svg.Svg msg
+viewHealthBar boss =
+    let
+        bPos =
+            boss.eb.pos
+
+        rectWidth =
+            100
+
+        rectPos =
+            newPosition (bPos.x + ((boss.eb.dim.width - rectWidth) / 2)) (bPos.y - 20)
+
+        barX =
+            SvgA.x (String.fromFloat rectPos.x)
+
+        barY =
+            SvgA.y (String.fromFloat rectPos.y)
+
+        barWidthA =
+            SvgA.width (sf initialHealth)
+
+        barHeightA =
+            SvgA.height (sf barHeight)
+
+        sf : Float -> String
+        sf f =
+            String.fromFloat f
+    in
+    Svg.g []
+        [ Svg.rect
+            [ barX
+            , barY
+            , barWidthA
+            , barHeightA
+            , SvgA.style "fill: #00000000; stroke: #ad3f2c; stroke-width: 2;"
+            ]
+            []
+        , Svg.rect
+            [ barX
+            , barY
+            , barHeightA
+            , SvgA.width (sf boss.health)
+            , SvgA.style "fill: #f0573c"
+            ]
+            []
+        ]

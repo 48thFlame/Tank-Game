@@ -68,12 +68,26 @@ bossSpeed =
 
 bossDestBuffer : Float
 bossDestBuffer =
-    60
+    125
 
 
 boosShotCoolDown : Float
 boosShotCoolDown =
     0.96
+
+
+
+-- boss - healthBar
+
+
+initialHealth : Float
+initialHealth =
+    100
+
+
+barHeight : Float
+barHeight =
+    8
 
 
 
