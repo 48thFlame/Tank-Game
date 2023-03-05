@@ -3,7 +3,8 @@ module Main exposing (main)
 import Browser
 import Browser.Events as Events
 import Engine exposing (..)
-import Game exposing (..)
+import Game.Game exposing (..)
+import Game.GameObjs exposing (..)
 import Html
 import Random
 import Set
