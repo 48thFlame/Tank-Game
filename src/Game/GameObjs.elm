@@ -4,9 +4,6 @@ import Constants exposing (..)
 import Engine exposing (..)
 
 
-
-
-
 type alias GameState =
     { tank : Tank, boss : Boss }
 
@@ -99,7 +96,7 @@ newBoss =
     , dest = startPos
     , dist = -1
     , coolDown = 0
-    , projectiles = [ newMissile (getCenterPos bossEb) ]
+    , projectiles = []
     , health = initialHealth
     }
 
