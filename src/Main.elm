@@ -15,6 +15,11 @@ import Svg
 -- MODEL
 
 
+newRandomGenerator : Cmd Msg
+newRandomGenerator =
+    Random.generate NewRandom (Random.float 0 1)
+
+
 type alias Model =
     { gs : GameState
     , keys : KeysPressed
@@ -28,7 +33,7 @@ initialModel _ =
       , keys = initialKeysPressed
       , rand = 0
       }
-    , Cmd.none
+    , newRandomGenerator
     )
 
 
@@ -54,7 +59,7 @@ update msg model =
                     deltaTime / 1000
             in
             ( { model | gs = updateGameState delta model.rand model.keys model.gs }
-            , Random.generate NewRandom (Random.float 0 1)
+            , newRandomGenerator
             )
 
         NewRandom rand ->
