@@ -1,0 +1,13 @@
+body {
+    background-color: #b0c4de;
+}
+
+.gameCanvas {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    background: #efefef;
+    margin-top: 5vh;
+    margin-bottom: 5vh;
+    height: 80vh;
+}
