@@ -29,7 +29,7 @@ updateGameState delta rand keys gs =
 
         -- 3 filter missiles
         filteredLm =
-            filterBossMissiles updTank updLm
+            filterBossMissiles gs.tank updLm
 
         -- 4 update boss
         updBoss =
