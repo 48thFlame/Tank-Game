@@ -21,7 +21,7 @@ newRandomGenerator =
 
 
 type alias Model =
-    { gs : GameState
+    { gs : State
     , keys : KeysPressed
     , rand : Float
     }

@@ -4,8 +4,14 @@ import Constants exposing (..)
 import Engine exposing (..)
 
 
-type alias GameState =
-    { tank : Tank, boss : Boss }
+type PlayingState
+    = Playing
+    | Won
+    | Lost
+
+
+type alias State =
+    { ps : PlayingState, tank : Tank, boss : Boss }
 
 
 newTank : Tank

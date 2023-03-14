@@ -16,7 +16,7 @@ updateTank delta keys boss tank =
 -}
 getTankMsgs : KeysPressed -> Boss -> Tank -> List TankMsg
 getTankMsgs keys boss tank =
-    List.concat [ tankGetHits boss tank, keyManagerUpdate keys tank ]
+    List.concat [ keyManagerUpdate keys tank, tankGetHits boss tank ]
 
 
 tankGetHits : Boss -> Tank -> List TankMsg

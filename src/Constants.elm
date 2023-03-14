@@ -68,7 +68,7 @@ bossSpeed =
 
 bossDestBuffer : Float
 bossDestBuffer =
-    125
+    80
 
 
 boosShotCoolDown : Float
@@ -96,7 +96,7 @@ barHeight =
 
 missileMaxTime : Float
 missileMaxTime =
-    4.5
+    5.8
 
 
 missileAddToTime : Float

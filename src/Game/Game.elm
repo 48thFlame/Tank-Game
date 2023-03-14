@@ -5,41 +5,61 @@ import Engine exposing (..)
 import Game.Boss exposing (..)
 import Game.GameObjs exposing (..)
 import Game.Tank exposing (..)
+import Html
+import Html.Attributes as HtmlA
 import Svg
 import Svg.Attributes as SvgA
 
 
-newGameState : GameState
+newGameState : State
 newGameState =
-    { tank = newTank, boss = newBoss }
+    { ps = Playing, tank = newTank, boss = newBoss }
 
 
-updateGameState : Float -> Float -> KeysPressed -> GameState -> GameState
+updateGameState : Float -> Float -> KeysPressed -> State -> State
 updateGameState delta rand keys gs =
     let
         -- 1 move missiles
-        updBm =
+        updLm =
             updateBossMissiles delta gs.tank gs.boss
 
         -- 2 update tank
         updTank =
-            updateTank delta keys updBm gs.tank
+            updateTank delta keys updLm gs.tank
 
         -- 3 filter missiles
         filteredLm =
-            filterBossMissiles updTank updBm
+            filterBossMissiles updTank updLm
 
         -- 4 update boss
         updBoss =
             updateBoss delta rand filteredLm
     in
-    { gs
-        | tank = updTank
-        , boss = updBoss
-    }
+    case gs.ps of
+        Playing ->
+            { gs
+                | tank = updTank
+                , boss = updBoss
+                , ps = getPlayingState gs
+            }
+
+        _ ->
+            gs
 
 
-gameCanvas : GameState -> Svg.Svg msg
+getPlayingState : State -> PlayingState
+getPlayingState gs =
+    if gs.boss.health <= 0 then
+        Won
+
+    else if gs.tank.health <= 0 then
+        Lost
+
+    else
+        Playing
+
+
+gameCanvas : State -> Svg.Svg msg
 gameCanvas gs =
     let
         stringedWidth =
@@ -47,14 +67,26 @@ gameCanvas gs =
 
         stringedHeight =
             String.fromFloat height
+
+        mainGame =
+            Svg.svg
+                [ SvgA.viewBox ("0 0 " ++ stringedWidth ++ " " ++ stringedHeight)
+                , SvgA.class "canvas"
+                ]
+                [ viewHealthBar gs.tank, viewObj gs.tank, viewHealthBar gs.boss, viewObj gs.boss ]
     in
-    Svg.svg
-        [ SvgA.viewBox ("0 0 " ++ stringedWidth ++ " " ++ stringedHeight)
-        , SvgA.width stringedWidth
-        , SvgA.height stringedHeight
-        , SvgA.style "background: #efefef; display: block; margin: auto;"
-        ]
-        [ viewHealthBar gs.tank, viewObj gs.tank, viewHealthBar gs.boss, viewObj gs.boss ]
+    Html.div
+        [ HtmlA.class "gameContainer" ]
+        (case gs.ps of
+            Playing ->
+                [ mainGame ]
+
+            Won ->
+                [ Html.div [ SvgA.class "gameText" ] [ Html.text "You Win!" ], mainGame ]
+
+            Lost ->
+                [ Html.div [ SvgA.class "gameText" ] [ Html.text "You Lost!" ], mainGame ]
+        )
 
 
 viewObj :
