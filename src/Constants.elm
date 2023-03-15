@@ -94,6 +94,16 @@ barHeight =
 -- boss - missile
 
 
+missileWidth : Float
+missileWidth =
+    48
+
+
+missileHeight : Float
+missileHeight =
+    48
+
+
 missileMaxTime : Float
 missileMaxTime =
     5.8
@@ -107,6 +117,11 @@ missileAddToTime =
 missileSpeed : Float
 missileSpeed =
     80
+
+
+missileDamage : Float
+missileDamage =
+    20
 
 
 width : Float

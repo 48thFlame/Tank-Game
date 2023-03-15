@@ -9,7 +9,6 @@ updateTank : Float -> KeysPressed -> Boss -> Tank -> Tank
 updateTank delta keys boss tank =
     mapTankToMsgs delta (getTankMsgs keys boss tank) tank
         |> updateTankOutside
-        |> updateTankBullets delta
 
 
 {-| Returns all `TankMsg`s
@@ -55,7 +54,7 @@ msgUpdateTank delta tMsg tank =
                 tank
 
         MissileHit ->
-            { tank | health = tank.health - 10 }
+            { tank | health = tank.health - missileDamage }
 
 
 canFire : Tank -> Float -> Float -> Bool
@@ -103,23 +102,39 @@ updateTankOutside tank =
     { tank | eb = newTankEb }
 
 
-updateTankBullets : Float -> Tank -> Tank
-updateTankBullets delta tank =
+updateTankBullets : Float -> Boss -> Tank -> Tank
+updateTankBullets delta boss tank =
     { tank
         | projectiles =
-            moveBullets delta tank.projectiles
-                |> removeBulletsOutside (newDimension width height)
+            List.map (updateBullet delta boss) tank.projectiles
+                |> filterTankBullets (newDimension width height)
         , coolDown = tank.coolDown + delta
     }
 
 
-moveBullets : Float -> List Bullet -> List Bullet
-moveBullets delta lb =
-    List.map (applyVelocity (bulletSpeed * delta)) lb
+updateBullet : Float -> Boss -> Bullet -> Bullet
+updateBullet delta boss b =
+    let
+        bulletMoved =
+            moveBullet delta b
+
+        -- _ =
+        --     Debug.log "Bullet:" b
+    in
+    { bulletMoved | destroy = List.any (\m -> isCollided m.eb b.eb) boss.projectiles }
 
 
-removeBulletsOutside : Dimension -> List Bullet -> List Bullet
-removeBulletsOutside dim lb =
+
+-- { bulletMoved | destroy = True }
+
+
+moveBullet : Float -> Bullet -> Bullet
+moveBullet delta b =
+    applyVelocity (bulletSpeed * delta) b
+
+
+filterTankBullets : Dimension -> List Bullet -> List Bullet
+filterTankBullets dim lb =
     -- make the "canvas" to entity and check collision
     let
         canvasEnt =
@@ -127,6 +142,9 @@ removeBulletsOutside dim lb =
     in
     List.filter
         (\b ->
+            -- let
+            -- in
             isCollided canvasEnt b.eb
         )
         lb
+        |> List.filter (\b -> not b.destroy)

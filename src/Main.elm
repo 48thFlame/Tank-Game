@@ -7,8 +7,6 @@ import Game.Game exposing (..)
 import Game.GameObjs exposing (..)
 import Html
 import Random
-import Set
-import Svg
 
 
 
@@ -82,12 +80,9 @@ update msg model =
 -- VIEW
 
 
-view : Model -> Svg.Svg Msg
+view : Model -> Html.Html Msg
 view model =
-    Html.div []
-        [ gameCanvas model.gs
-        , Html.div [] [ Html.text (model.keys |> Set.toList |> String.join ", ") ]
-        ]
+    gameCanvas model.gs
 
 
 

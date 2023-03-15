@@ -110,8 +110,16 @@ updateMissile delta tank m =
                 |> faceRotation mEb
                 -- move
                 |> actAction delta (MoveForward missileSpeed)
+
+        {- | if hit a missile delete self by setting .sinceLaunch to deletion, otherwise just regular -}
+        sinceLaunch =
+            if List.any (\b -> isCollided m.eb b.eb) tank.projectiles then
+                missileMaxTime + 1
+
+            else
+                m.sinceLaunch + (missileAddToTime * delta)
     in
-    { m | eb = newMEb, sinceLaunch = m.sinceLaunch + (missileAddToTime * delta) }
+    { m | eb = newMEb, sinceLaunch = sinceLaunch }
 
 
 getMissileAngle : Tank -> Missile -> Float
@@ -143,8 +151,6 @@ updateBossMissiles delta tank boss =
         | projectiles =
             newProjs
                 |> List.map (updateMissile delta tank)
-
-        -- |> filterMissilesTankHits tank
         , coolDown = newCoolDown
     }
 

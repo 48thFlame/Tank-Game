@@ -63,18 +63,20 @@ newBullet pos rot =
     in
     { eb =
         { pos = pos
-        , dim = newDimension 16 16
+        , dim = newDimension bulletWidth bulletHeight
         , rot = rot
         , img = "assets/bullet.png"
         }
             |> actAction 1 (MoveForward 32)
     , vel = { dx = Tuple.first xy, dy = Tuple.second xy }
+    , destroy = False
     }
 
 
 type alias Bullet =
     { eb : EntityBase
     , vel : Velocity
+    , destroy : Bool
     }
 
 
@@ -121,7 +123,7 @@ newMissile : Position -> Missile
 newMissile pos =
     { eb =
         { pos = pos
-        , dim = newDimension 32 32
+        , dim = newDimension missileWidth missileHeight
         , rot = initialRotation
         , img = "assets/missile.png"
         }

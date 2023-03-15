@@ -18,25 +18,29 @@ newGameState =
 
 updateGameState : Float -> Float -> KeysPressed -> State -> State
 updateGameState delta rand keys gs =
-    let
-        -- 1 move missiles
-        updLm =
-            updateBossMissiles delta gs.tank gs.boss
-
-        -- 2 update tank
-        updTank =
-            updateTank delta keys updLm gs.tank
-
-        -- 3 filter missiles
-        filteredLm =
-            filterBossMissiles gs.tank updLm
-
-        -- 4 update boss
-        updBoss =
-            updateBoss delta rand filteredLm
-    in
     case gs.ps of
         Playing ->
+            let
+                -- move missiles
+                updLm =
+                    updateBossMissiles delta gs.tank gs.boss
+
+                -- update bullets
+                updLb =
+                    updateTankBullets delta gs.boss gs.tank
+
+                -- update tank
+                updTank =
+                    updateTank delta keys updLm updLb
+
+                -- filter missiles
+                filteredLm =
+                    filterBossMissiles gs.tank updLm
+
+                -- update boss
+                updBoss =
+                    updateBoss delta rand filteredLm
+            in
             { gs
                 | tank = updTank
                 , boss = updBoss
