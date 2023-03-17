@@ -7,6 +7,7 @@ import Game.GameObjs exposing (..)
 import Game.Tank exposing (..)
 import Html
 import Html.Attributes as HtmlA
+import Html.Events as HtmlE
 import Svg
 import Svg.Attributes as SvgA
 
@@ -63,8 +64,8 @@ getPlayingState gs =
         Playing
 
 
-gameCanvas : State -> Svg.Svg msg
-gameCanvas gs =
+gameCanvas : msg -> State -> Svg.Svg msg
+gameCanvas playAgainMsg gs =
     let
         stringedWidth =
             String.fromFloat width
@@ -78,6 +79,9 @@ gameCanvas gs =
                 , SvgA.class "canvas"
                 ]
                 [ viewHealthBar gs.tank, viewObj gs.tank, viewHealthBar gs.boss, viewObj gs.boss ]
+
+        playAgainButton =
+            Html.button [ HtmlA.class "playAgainButton", HtmlE.onClick playAgainMsg ] [ Html.text "PlayAgain" ]
     in
     Html.div
         [ HtmlA.class "gameContainer" ]
@@ -86,10 +90,21 @@ gameCanvas gs =
                 [ mainGame ]
 
             Won ->
-                [ Html.div [ SvgA.class "gameText" ] [ Html.text "You Win!" ], mainGame ]
+                [ Html.div [ SvgA.class "gameText" ]
+                    [ Html.h1 [ HtmlA.class "h1EndText" ] [ Html.text "You Win! :-)" ]
+                    , playAgainButton
+                    ]
+                , mainGame
+                ]
 
             Lost ->
-                [ Html.div [ SvgA.class "gameText" ] [ Html.text "You Lost!" ], mainGame ]
+                -- [ Html.div [ SvgA.class "gameText" ] [ Html.text "You Lost!" ], mainGame ]
+                [ Html.div [ SvgA.class "gameText" ]
+                    [ Html.h1 [ HtmlA.class "h1EndText" ] [ Html.text "You Lost :(" ]
+                    , playAgainButton
+                    ]
+                , mainGame
+                ]
         )
 
 

@@ -45,6 +45,7 @@ type Msg
     | KeyDown String
     | KeyUp String
     | Blur Events.Visibility
+    | PlayAgain
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -75,6 +76,9 @@ update msg model =
             -- clear model.keys
             ( applyFuncToModelKeys model clearKeys, Cmd.none )
 
+        PlayAgain ->
+            initialModel ()
+
 
 
 -- VIEW
@@ -82,7 +86,7 @@ update msg model =
 
 view : Model -> Html.Html Msg
 view model =
-    gameCanvas model.gs
+    gameCanvas PlayAgain model.gs
 
 
 

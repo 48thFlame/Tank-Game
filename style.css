@@ -12,6 +12,7 @@ body {
     width: auto;
     aspect-ratio: 780/640;
     border: gray 5px solid;
+    border-radius: 4px;
 }
 
 .canvas,
@@ -20,13 +21,43 @@ body {
     grid-row: 1;
 }
 
+.canvas {
+    z-index: 0;
+    background: #efefef;
+}
 
 .gameText {
     background-color: rgba(255, 255, 255, 0.7);
     z-index: 1;
+    align-items: center;
+    justify-content: center;
 }
 
-.canvas {
-    z-index: 0;
-    background: #efefef;
+.h1EndText {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10vh;
+}
+
+.playAgainButton {
+    background-color: #4085b3;
+    border: rgb(31, 31, 31) 5px solid;
+    border-radius: 12px;
+    color: whitesmoke;
+    padding: 8px 16px;
+    font-size: 32px;
+    transition-duration: 0.2s;
+
+    box-shadow: 0 9px #999;
+}
+
+.playAgainButton:hover {
+    background-color: whitesmoke;
+    color: rgb(31, 31, 31);
+    border-color: #4085b3;
+}
+
+.playAgainButton:active {
+    /* background-color: #276086; */
+    box-shadow: 0 5px #666;
+    transform: translateY(4px);
 }
