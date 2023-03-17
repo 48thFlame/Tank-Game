@@ -117,11 +117,12 @@ updateBullet delta boss b =
     let
         bulletMoved =
             moveBullet delta b
-
-        -- _ =
-        --     Debug.log "Bullet:" b
     in
-    { bulletMoved | destroy = List.any (\m -> isCollided m.eb b.eb) boss.projectiles }
+    { bulletMoved
+        | destroy =
+            List.any (\m -> isCollided m.eb b.eb) boss.projectiles
+                || isCollided b.eb boss.eb
+    }
 
 
 

@@ -39,7 +39,7 @@ updateGameState delta rand keys gs =
 
                 -- update boss
                 updBoss =
-                    updateBoss delta rand filteredLm
+                    updateBoss delta rand gs.tank filteredLm
             in
             { gs
                 | tank = updTank

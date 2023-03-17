@@ -36,8 +36,8 @@ newRandDestBoss seed boss =
         pos
 
 
-updateBoss : Float -> Float -> Boss -> Boss
-updateBoss delta rand boss =
+updateBoss : Float -> Float -> Tank -> Boss -> Boss
+updateBoss delta rand tank boss =
     let
         -- eb manipulation
         bEb =
@@ -70,11 +70,29 @@ updateBoss delta rand boss =
 
             else
                 boss.dist - amountForward
+
+        bulletHitBoss : Bullet -> Bool
+        bulletHitBoss b =
+            isCollided boss.eb b.eb
+
+        isBossHit : Bool
+        isBossHit =
+            List.any
+                bulletHitBoss
+                tank.projectiles
+
+        newHealth =
+            if isBossHit then
+                boss.health - bulletDamage
+
+            else
+                boss.health
     in
     { boss
         | eb = newEb
         , dest = newDest
         , dist = newDist
+        , health = newHealth
     }
 
 
