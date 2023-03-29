@@ -1,3 +1,5 @@
-# Tank-game
+# Tank-Game
 
-A tank boss killing game written in Elm.
+A boss killing game written in Elm. \
+Check it out [here](https://48thflame.github.io/Tank-Game/). 
+
